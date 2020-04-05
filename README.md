@@ -58,7 +58,7 @@ slot opened:
 #!/usr/bin/env python3
 from twilio.rest import Client
 
-ACCOUNT_SID = 'YOUR ACCOUNT SID
+ACCOUNT_SID = 'YOUR ACCOUNT SID'
 AUTH_TOKEN = 'YOUR ACCOUNT AUTH TOKEN'
 
 FROM_PHONE_NUMBER = 'YOUR TWILIO PHONE NUMBER'

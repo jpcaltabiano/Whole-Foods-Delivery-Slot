@@ -16,7 +16,7 @@ def on_slots_open():
 
 def wait_for_slots(productUrl):
     try:
-    # Initialize browser
+        # Initialize browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36',
         }
@@ -39,7 +39,7 @@ def wait_for_slots(productUrl):
 
         while no_open_slots:
             # Wait random time before refreshing
-            refresh_delay = random.randrange(40, 80) + (random.randrange(10, 100) / 1000)
+            refresh_delay = random.randrange(20, 30) + (random.randrange(10, 100) / 1000)
             print("Refreshing in {}".format(refresh_delay))
             time.sleep(refresh_delay)
 
