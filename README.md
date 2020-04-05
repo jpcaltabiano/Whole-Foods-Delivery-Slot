@@ -6,7 +6,7 @@ Automatically checks for Whole Foods delivery slots.
 - [Usage](#usage)
 
 # Overview
-A fork of [@pcomputo 's Whole Foods delivery slot scriipt](https://github.com/pcomputo/Whole-Foods-Delivery-Slot).
+A fork of [@pcomputo 's Whole Foods delivery slot script](https://github.com/pcomputo/Whole-Foods-Delivery-Slot).
 
 Modified to work specifically with the Amazon Prime Whole Foods delivery 
 website. Additional modifications were made to the code.
