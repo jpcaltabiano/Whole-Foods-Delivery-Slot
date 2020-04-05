@@ -1,17 +1,86 @@
+#!/usr/bin/env python3
 import bs4
-
 from selenium import webdriver
 
 import sys
 import time
 import os
 import random
+import pickle
+import logging
 
+START_URL = 'https://primenow.amazon.com/cart?ref_=pn_sf_nav_cart'
+COOKIES_FILE_NAME = 'cookies.pkl'
+LOCAL_STORAGE_FILE_NAME = 'local-storage.pkl'
 NO_SLOT_PATTERN = 'No delivery windows available. New windows are released throughout the day.'
 NEXT_SLOT_EL_ID = 'delivery-slot-form'
 
+LOGGER = logging.getLogger('wf-slot')
+console_hdlr = logging.StreamHandler()
+console_hdlr.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] ' +
+                                            '%(message)s', '%Y-%m-%d %H:%M:%S'))
+LOGGER.addHandler(console_hdlr)
+LOGGER.setLevel(logging.DEBUG)
+
+
+class LocalStorage:
+    """ Local storage access class from this Stack Overflow answer: https://stackoverflow.com/a/46361900
+    """
+    def __init__(self, driver) :
+        self.driver = driver
+
+    def __len__(self):
+        return self.driver.execute_script("return window.localStorage.length;")
+
+    def items(self) :
+        return self.driver.execute_script( \
+            "var ls = window.localStorage, items = {}; " \
+            "for (var i = 0, k; i < ls.length; ++i) " \
+            "  items[k = ls.key(i)] = ls.getItem(k); " \
+            "return items; ")
+
+    def keys(self) :
+        return self.driver.execute_script( \
+            "var ls = window.localStorage, keys = []; " \
+            "for (var i = 0; i < ls.length; ++i) " \
+            "  keys[i] = ls.key(i); " \
+            "return keys; ")
+
+    def get(self, key):
+        return self.driver.execute_script("return window.localStorage.getItem(arguments[0]);", key)
+
+    def set(self, key, value):
+        self.driver.execute_script("window.localStorage.setItem(arguments[0], arguments[1]);", key, value)
+
+    def has(self, key):
+        return key in self.keys()
+
+    def remove(self, key):
+        self.driver.execute_script("window.localStorage.removeItem(arguments[0]);", key)
+
+    def clear(self):
+        self.driver.execute_script("window.localStorage.clear();")
+
+    def __getitem__(self, key) :
+        value = self.get(key)
+        if value is None :
+          raise KeyError(key)
+        return value
+
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __contains__(self, key):
+        return key in self.keys()
+
+    def __iter__(self):
+        return self.items().__iter__()
+
+    def __repr__(self):
+        return self.items().__str__()
+
 def on_slots_open():
-    print("Slots open")
+    LOGGER.info("Slots open")
     os.system('./on-slots-open')
 
 def wait_for_slots(productUrl):
@@ -25,14 +94,40 @@ def wait_for_slots(productUrl):
         driver.get(productUrl)           
         html = driver.page_source
         soup = bs4.BeautifulSoup(html, features='html.parser')
+        local_storage = LocalStorage(driver)
+
+        # Load cookies from previous session
+        if os.path.isfile(COOKIES_FILE_NAME):
+            for cookie in pickle.load(open(COOKIES_FILE_NAME, 'rb')):
+                driver.add_cookie(cookie)
+            LOGGER.info("Loaded cookies from {} from last session"
+                        .format(COOKIES_FILE_NAME))
+
+        # Load local storage from previous session
+        if os.path.isfile(LOCAL_STORAGE_FILE_NAME):
+            items = pickle.load(open(LOCAL_STORAGE_FILE_NAME, 'rb'))
+            for key in items:
+                local_storage.set(key, items[key])
+            LOGGER.info("Loaded local storage from {} from last session"
+                        .format(LOCAL_STORAGE_FILE_NAME))
 
         # Wait for user to login
-        print("Please do the following:")
-        print("1. Login to the Whole Foods website")
-        print("2. Select items")
-        print("3. Procede to the checkout page")
-        print("Press [ENTER] when you reach the select time slot page")
+        LOGGER.info("Please do the following:")
+        LOGGER.info("1. Login to the Whole Foods website")
+        LOGGER.info("2. Select items")
+        LOGGER.info("3. Procede to the checkout page")
+        LOGGER.info("Press [ENTER] when you reach the select time slot page")
         input()
+
+        # Save cookies for future use
+        pickle.dump(driver.get_cookies(), open(COOKIES_FILE_NAME, 'wb'))
+        LOGGER.info("Saved cookies into {} for future use"
+                    .format(COOKIES_FILE_NAME))
+
+        # Save local storage for future use
+        pickle.dump(local_storage.items(), open(LOCAL_STORAGE_FILE_NAME, 'wb'))
+        LOGGER.info("Saved local storage in {} for future use"
+                    .format(LOCAL_STORAGE_FILE_NAME))
 
         # Refresh site every so often until a slot opens
         no_open_slots = True
@@ -40,7 +135,7 @@ def wait_for_slots(productUrl):
         while no_open_slots:
             # Wait random time before refreshing
             refresh_delay = random.randrange(20, 30) + (random.randrange(10, 100) / 1000)
-            print("Refreshing in {}".format(refresh_delay))
+            LOGGER.info("Refreshing in {}".format(refresh_delay))
             time.sleep(refresh_delay)
 
             driver.refresh()
@@ -57,14 +152,14 @@ def wait_for_slots(productUrl):
                     no_open_slots = False
                     on_slots_open()
                 else:
-                    print("No slots available")
+                    LOGGER.info("No slots available")
             except AttributeError:
-                print("Could not find slot selection element")
+                LOGGER.info("Could not find slot selection element")
                 continue
     except KeyboardInterrupt:
         driver.quit()
-        print("Exited")
+        LOGGER.info("Exited")
 
-wait_for_slots('https://primenow.amazon.com/checkout/enter-checkout?merchantId=A60EDBF48VWF4&ref=pn_sc_ptc_bwr&siteState=clientContext%3D139-2884847-4954330%2CsourceUrl%3Dhttps%253A%252F%252Fprimenow.amazon.com%252Fcheckout%252Fenter-checkout%253FmerchantId%253DA60EDBF48VWF4%2526ref%253Dpn_sc_ptc_bwr%2Csignature%3DyxVgpUj2BTjSBczxFa3HZKaH8oJjgj3D&openid.assoc_handle=amzn_houdini_desktop_us&openid.claimed_id=https%3A%2F%2Fprimenow.amazon.com%2Fap%2Fid%2Famzn1.account.AGPB7XCY7Q5US7ARDHMA43FD7OYQ&openid.identity=https%3A%2F%2Fprimenow.amazon.com%2Fap%2Fid%2Famzn1.account.AGPB7XCY7Q5US7ARDHMA43FD7OYQ&openid.mode=id_res&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.op_endpoint=https%3A%2F%2Fprimenow.amazon.com%2Fap%2Fsignin&openid.response_nonce=2020-04-04T18%3A13%3A28Z1384691716231590270&openid.return_to=https%3A%2F%2Fprimenow.amazon.com%2Fcheckout%2Fenter-checkout%3FmerchantId%3DA60EDBF48VWF4%26ref%3Dpn_sc_ptc_bwr%26siteState%3DclientContext%253D139-2884847-4954330%252CsourceUrl%253Dhttps%25253A%25252F%25252Fprimenow.amazon.com%25252Fcheckout%25252Fenter-checkout%25253FmerchantId%25253DA60EDBF48VWF4%252526ref%25253Dpn_sc_ptc_bwr%252Csignature%253DyxVgpUj2BTjSBczxFa3HZKaH8oJjgj3D&openid.signed=assoc_handle%2Cclaimed_id%2Cidentity%2Cmode%2Cns%2Cop_endpoint%2Cresponse_nonce%2Creturn_to%2Cns.pape%2Cpape.auth_policies%2Cpape.auth_time%2Csigned&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.auth_policies=http%3A%2F%2Fschemas.openid.net%2Fpape%2Fpolicies%2F2007%2F06%2Fnone&openid.pape.auth_time=2020-04-04T18%3A13%3A28Z&openid.sig=tyxlj76%2FBeJPizhiqjRWLcqFizIPZjnXoAwOOnOqa1s%3D&serial=&')
+wait_for_slots(START_URL)
 
 

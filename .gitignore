@@ -1,2 +1,4 @@
 on-slots-open
 geckodriver.log
+cookies.pkl
+local-storage.pkl
