@@ -1,48 +1,85 @@
-# Whole Foods and Amazon Fresh Delivery Slot Automated Script
+# Whole Foods Delivery Slot
+Automatically checks for Whole Foods delivery slots.
 
-Yes, amid COVID-19 trying to get Whole Foods and Amazon Fresh delivery slots can get cumbersome. To free you off the constant hassle of checking for slots (and almost never finding one), this automated script can notify you (yes notifies you verbally, so you can go about your tasks) of when new delivery slots open.
+# Table Of Contents
+- [Overview](#overview)
+- [Usage](#usage)
 
+# Overview
+A fork of [@pcomputo 's Whole Foods delivery slot scriipt](https://github.com/pcomputo/Whole-Foods-Delivery-Slot).
 
-## Usage:
-Supports **MacOS, Linux, and Windows**.
+Modified to work specifically with the Amazon Prime Whole Foods delivery 
+website. Additional modifications were made to the code.
 
-Note, use the ```whole_foods_delivery_windows.py``` for Windows. Also, only for this OS, you'll have to install an additional package ```winsound```
+See [the Usage section](#usage) for instructions.
 
-The script works on **Chrome** (```whole_foods_delivery_slot_chrome.py``` for Whole Foods) (```amazon_fresh_delivery_slot_chrome.py``` for Amazon Fresh) and **FireFox** (```whole_foods_delivery_slot_firefox.py```) for now. 
-It initializes a  webdriver, for which if you don't have one install it from: https://chromedriver.chromium.org/ for Chrome and https://github.com/mozilla/geckodriver/releases for FireFox.
+# Usage
+This script is geared towards more advanced users with terminal knowledge.
 
-You'll have to update the path of the this installed webdriver under: ```python driver = webdriver.Chrome()``` if its not the default location your OS needs. Similarly, for FireFox ```python driver = webdriver.Firefox(executable_path="<your-webdriver-path>")```
+It has only been tested on Linux.
 
-Script was written on Python 2.7.10
+## Install
+First download this repository and navigate to its root directory. Either using 
+`git clone` or by downloading [this ZIP file](https://github.com/Noah-Huppert/Whole-Foods-Delivery-Slot/archive/master.zip)
+and extracting it.
 
+Install [Python 3](https://www.python.org/).  
+Install [Pipenv](https://pipenv.pypa.io/en/latest/):
 
+```
+pip3 install pipenv
+```
 
+Install [Firefox](https://www.mozilla.org/en-US/firefox/new/) and [geckodriver](https://github.com/mozilla/geckodriver).
 
-_The script works after you have added all the items to your cart! Note, have your cart ready before running this script! Also, please don't let your computer sleep. Let your computer do the work, while you sleep_
+Finally install this script's Python dependencies:
 
+```
+pipenv install
+```
 
+## Setup
+The script will invoke another script in the repository root named 
+`on-slots-open` when a Whole Foods delivery slot becomes available.
 
-### After you clone the project:
-_Walkthrough for Chrome for Whole Foods, follow same steps if running on FireFox with the FireFox script_
+Create this file:
 
-1. Run the requirements.txt (```$ pip install -r requirements.txt```)
-2. Run whole_foods_delivery_slot_chrome.py (``` $ python whole_foods_delivery_slot_chrome.py```)
-3. The first time you run this script, Whole Foods cart will ask you to login. After you login, go to the "Shipping and Payment" window. Its titled: _Schedule your order_. Leave the script running.
-4. Get a nice warm Tea, browse reddit, do something on Xbox, etc.
-5. Once a slot opens the script will verbally notify you of an open slot.
-6. Proceed to checkout once you select a time slot. Stay Safe!
+```
+touch on-slots-open
+chmod +x on-slots-open
+```
 
-> __Screen 1__
-![alt text](https://github.com/pcomputo/Whole-Foods-Delivery-Slot/blob/master/instruction_img/step1.png)
+Then edit this file to your liking. Remember to add a shabang at the top.
 
-> __Screen 2__
-![alt text](https://github.com/pcomputo/Whole-Foods-Delivery-Slot/blob/master/instruction_img/step2.png)
+I made my script call me using [Twilio](https://www.twilio.com) when a 
+slot opened:
 
-> __Screen 3__
-![alt text](https://github.com/pcomputo/Whole-Foods-Delivery-Slot/blob/master/instruction_img/step3.png)
+```python
+#!/usr/bin/env python3
+from twilio.rest import Client
 
-> __Screen 4__
-![alt text](https://github.com/pcomputo/Whole-Foods-Delivery-Slot/blob/master/instruction_img/step4.png)
+ACCOUNT_SID = 'YOUR ACCOUNT SID
+AUTH_TOKEN = 'YOUR ACCOUNT AUTH TOKEN'
 
-> __Screen 5: Leave script running on this screen!__
-![alt text](https://github.com/pcomputo/Whole-Foods-Delivery-Slot/blob/master/instruction_img/step5.png)
+FROM_PHONE_NUMBER = 'YOUR TWILIO PHONE NUMBER'
+TO_PHONE_NUMBER = 'YOUR PHONE NUMBER'
+
+client = Client(ACCOUNT_SID, AUTH_TOKEN)
+
+call = client.calls.create(
+    twiml='<Response><Say>A Whole Foods delivery slot has become available, login to the Whole Foods Delivery site quickly to place your order!</Say></Response>',
+    to=TO_PHONE_NUMBER,
+    from_=FROM_PHONE_NUMBER,
+)
+
+print(call.sid)
+```
+
+## Run
+Run the script:
+
+```
+pipenv run whole_foods_delivery_slot.py
+```
+
+Then follow the instructions in the terminal.
