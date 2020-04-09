@@ -72,7 +72,7 @@ call = client.calls.create(
     from_=FROM_PHONE_NUMBER,
 )
 
-print(call.sid)
+print("Call sid={}".format(call.sid))
 ```
 
 ## Run
