@@ -42,6 +42,16 @@ pipenv install
 ```
 
 ## Run
+Start Redis (used to persist data). If you do not have Redis install you can run
+it in a container:
+
+```
+./redis-server start
+```
+
+This script uses [`podman`](https://podman.io/). To use a different container 
+client set the `CONTAINER_CLI` environment variable.
+
 Start the server:
 
 ```
