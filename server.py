@@ -20,6 +20,30 @@ class IndexPageResource:
         """ Redirect to index.html
         """
         raise falcon.HTTPMovedPermanently('/index.html')
+    
+class ItemsResource:
+    """ Manages the list of known items.
+    """
+
+    def on_get(self, req, resp):
+        """ Retrieve all items.
+        """
+        """ TODO:
+        - Make return items
+        - Make cart functionality
+            - Server endpoints to:
+                - Search items in the cart and / or archived
+                - Search for items on the Whole Foods website
+                - Add an item to the cart
+            - BrowserAPI methods to search Whole Foods website and list items
+            - Behavior:
+                - The user will first search for items already in redis
+                - If the item is in redis they can add / remove it from the cart
+                - If the item is not in the cart the Whole Foods website will be
+                  searched for the item
+                - Only the first 10-20 items will be scraped and serialized 
+                  in memory
+        """
 
 # Setup logger
 LOGGER = logging.getLogger('wf-slot')
