@@ -1,45 +1,57 @@
 #!/usr/bin/env bash
 # Starts or stops a redis server.
-CONTAINER_CLI="sudo podman"
+if [ -z "$CONTAINER_CLI" ]; then
+    CONTAINER_CLI="sudo podman"
+fi
+
 CONTAINER_NAME=wf-delivery-slot-redis
 CONTAINER_TAG="redis:latest"
+HOST_DATA_DIR="$PWD/container-data/redis"
+
+function die() {
+    echo "$@" >&2
+    exit 1
+}
 
 case "$1" in
     start)
 	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
 		  $CONTAINER_CLI start "$CONTAINER_NAME"
+		  echo "Resumed"
 	   else
+		  mkdir -p "$HOST_DATA_DIR"
 		  $CONTAINER_CLI run \
 					  -d \
 					  --net host \
 					  -p 6379 \
+					  -v "$HOST_DATA_DIR:/data" \
 					  --name "$CONTAINER_NAME" \
-					  "$CONTAINER_TAG"
+					  "$CONTAINER_TAG" --appendonly yes
+		  echo "Started new"
 	   fi
 	   ;;
     logs)
-	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
+	   if $CONTAINER_CLI ps | grep "$CONTAINER_NAME" &> /dev/null; then
 		  $CONTAINER_CLI logs -f "$CONTAINER_NAME"
 	   else
-		  echo "Not running"
+		  die "Not running"
 	   fi
 	   ;;
     stop)
 	   if $CONTAINER_CLI ps | grep "$CONTAINER_NAME" &> /dev/null; then
 		  $CONTAINER_CLI stop "$CONTAINER_NAME"
 	   else
-		  echo "Not running"
+		  die "Not running"
 	   fi
 	   ;;
     rm)
 	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
 		  $CONTAINER_CLI rm "$CONTAINER_NAME"
 	   else
-		  echo "Not running"
+		  die "Not running"
 	   fi
 	   ;;
     *)
-	   echo "Invalid command \"$1\", must be \"start\", \"stop\", or \"logs\"" >&2
-	   exit 1
+	   die "Invalid command \"$1\", must be \"start\", \"stop\", or \"logs\""
 	   ;;
 esac
