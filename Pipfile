@@ -15,6 +15,8 @@ twilio = "*"
 requests = "*"
 redis = "*"
 falcon = "*"
+pylint = "*"
+eventlet = "*"
 
 [requires]
 python_version = "3.8"

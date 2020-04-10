@@ -8,8 +8,11 @@ Automatically checks for Whole Foods delivery slots.
 # Overview
 A fork of [@pcomputo 's Whole Foods delivery slot script](https://github.com/pcomputo/Whole-Foods-Delivery-Slot).
 
-Modified to work specifically with the Amazon Prime Whole Foods delivery 
-website. Additional modifications were made to the code.
+The spirit of the original was kept and mind and additional features were added:
+
+- Web interface
+- Open slot notification via phone call
+- Automated cart management
 
 See [the Usage section](#usage) for instructions.
 
@@ -38,48 +41,21 @@ Finally install this script's Python dependencies:
 pipenv install
 ```
 
-## Setup
-The script will invoke another script in the repository root named 
-`on-slots-open` when a Whole Foods delivery slot becomes available.
-
-Create this file:
-
-```
-touch on-slots-open
-chmod +x on-slots-open
-```
-
-Then edit this file to your liking. Remember to add a shabang at the top.
-
-I made my script call me using [Twilio](https://www.twilio.com) when a 
-slot opened:
-
-```python
-#!/usr/bin/env python3
-from twilio.rest import Client
-
-ACCOUNT_SID = 'YOUR ACCOUNT SID'
-AUTH_TOKEN = 'YOUR ACCOUNT AUTH TOKEN'
-
-FROM_PHONE_NUMBER = 'YOUR TWILIO PHONE NUMBER'
-TO_PHONE_NUMBER = 'YOUR PHONE NUMBER'
-
-client = Client(ACCOUNT_SID, AUTH_TOKEN)
-
-call = client.calls.create(
-    twiml='<Response><Say>A Whole Foods delivery slot has become available, login to the Whole Foods Delivery site quickly to place your order!</Say></Response>',
-    to=TO_PHONE_NUMBER,
-    from_=FROM_PHONE_NUMBER,
-)
-
-print("Call sid={}".format(call.sid))
-```
-
 ## Run
-Run the script:
+Start the server:
 
 ```
-pipenv run whole_foods_delivery_slot.py
+pipenv shell
+./server.py
 ```
 
-Then follow the instructions in the terminal.
+Navigate to [localhost:8000](http://localhost:8000) and follow instructions.
+
+A command line interface is also available:
+
+```
+pipenv shell
+./cli.py -h
+```
+
+See the help message for available commands.

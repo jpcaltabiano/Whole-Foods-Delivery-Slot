@@ -1,3 +1,6 @@
+""" Browser control related functionality.
+"""
+
 import os
 import pickle
 import json
@@ -57,7 +60,7 @@ class BrowserAPI:
 
         Returns: Element selected by XPATH
         """
-        return WebDriverWait(self.driver, timeout=10).until(
+        return WebDriverWait(self.driver, timeout).until(
             EC.element_to_be_clickable(
                 (By.XPATH, xpath)
             )
@@ -69,9 +72,7 @@ class BrowserAPI:
         - xpath: XPATH of element to click
         - timeout (int): Number of seconds to wait before action times out
         """
-        el = self.get_element(xpath, timeout=timeout)
-
-        el.click()
+        self.get_element(xpath, timeout=timeout).click()
 
     def ensure_url_contains(self, url_part, timeout=10):
         """ Ensures that the current page URL contains url_part.
@@ -106,15 +107,16 @@ class BrowserAPI:
             'mid': mid,
         }
 
-        name_el = get_element(driver, self.ITEM_PAGE_NAME_EL)
-        image_el = get_element(driver, self.ITEM_PAGE_IMAGE_EL)
-        price_el = get_element(driver, self.ITEM_PAGE_PRICE_EL)
-        add_cart_el = get_element(driver, self.ITEM_PAGE_ADD_CART_EL)
+        name_el = self.get_element(self.ITEM_PAGE_NAME_EL)
+        image_el = self.get_element(self.ITEM_PAGE_IMAGE_EL)
+        price_el = self.get_element(self.ITEM_PAGE_PRICE_EL)
+        add_cart_el = self.get_element(self.ITEM_PAGE_ADD_CART_EL)
 
         info['name'] = name_el.text
         info['image_url'] = image_el.get_attribute('src')
         info['price'] = float(price_el.text.replace('$', ''))
-        info['offer_id'] = json.loads(add_cart_el
-            .get_attribute('data-primenow-atc'))['inputs']['offerListingID']
+
+        add_cart_attr = json.loads(add_cart_el.get_attribute('data-primenow-atc'))
+        info['offer_id'] = add_cart_attr['inputs']['offerListingID']
 
         return info

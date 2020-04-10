@@ -1,3 +1,6 @@
+""" HTTP API related functionality.
+"""
+
 import requests
 
 class FoodAPI:
@@ -31,7 +34,9 @@ class FoodAPI:
 
     GET_CART_URL = 'https://primenow.amazon.com/cart/ajax/'
 
-    ADD_ITEM_URL = 'https://primenow.amazon.com/cart/ajax/additem/ref=pn_dp_bb_atc?itemAsin={asin}&offerId={offer_id}&qid=0&quantity={quantity}'
+    ADD_ITEM_URL = 'https://primenow.amazon.com/cart/ajax/additem/\
+                   ref=pn_dp_bb_atc?itemAsin={asin}&offerId={offer_id}&\
+                   qid=0&quantity={quantity}'
 
     def __init__(self, logger):
         """ Creates a new client.
@@ -39,7 +44,7 @@ class FoodAPI:
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0',
         }
-        
+
         self.cookies = {}
         self.logger = logger
 
@@ -52,7 +57,7 @@ class FoodAPI:
         """
         for cookie in browser_api.driver.get_cookies():
             self.cookies[cookie['name']] = cookie['value']
-        
+
     def get_cart(self):
         """ Retrieves the current cart.
         Raises:
