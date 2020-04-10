@@ -7,6 +7,7 @@ import logging
 import falcon
 from eventlet import wsgi
 import eventlet
+import redis
 
 from browser_api import BrowserAPI
 from food_api import FoodAPI
@@ -28,6 +29,9 @@ console_hdlr.setFormatter(logging.Formatter(' %(asctime)s [%(levelname)s] ' +
                                             '%Y-%m-%d %H:%M:%S'))
 LOGGER.addHandler(console_hdlr)
 LOGGER.setLevel(logging.DEBUG)
+
+# Connect to Redis
+REDIS = redis.Redis(host='localhost', port=6379, db=0)
     
 # Initialize Amazon food API clients
 BROWSER_API = BrowserAPI(LOGGER)
