@@ -12,7 +12,9 @@ selenium = "==3.141.0"
 urllib3 = "==1.25.8"
 webdriver-manager = "==2.3.0"
 twilio = "*"
-pickle = "*"
+requests = "*"
+redis = "*"
+falcon = "*"
 
 [requires]
 python_version = "3.8"

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Starts or stops a redis server.
+CONTAINER_CLI="sudo podman"
+CONTAINER_NAME=wf-delivery-slot-redis
+CONTAINER_TAG="redis:latest"
+
+case "$1" in
+    start)
+	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
+		  $CONTAINER_CLI start "$CONTAINER_NAME"
+	   else
+		  $CONTAINER_CLI run \
+					  -d \
+					  --net host \
+					  -p 6379 \
+					  --name "$CONTAINER_NAME" \
+					  "$CONTAINER_TAG"
+	   fi
+	   ;;
+    logs)
+	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
+		  $CONTAINER_CLI logs -f "$CONTAINER_NAME"
+	   else
+		  echo "Not running"
+	   fi
+	   ;;
+    stop)
+	   if $CONTAINER_CLI ps | grep "$CONTAINER_NAME" &> /dev/null; then
+		  $CONTAINER_CLI stop "$CONTAINER_NAME"
+	   else
+		  echo "Not running"
+	   fi
+	   ;;
+    rm)
+	   if $CONTAINER_CLI ps -a | grep "$CONTAINER_NAME" &> /dev/null; then
+		  $CONTAINER_CLI rm "$CONTAINER_NAME"
+	   else
+		  echo "Not running"
+	   fi
+	   ;;
+    *)
+	   echo "Invalid command \"$1\", must be \"start\", \"stop\", or \"logs\"" >&2
+	   exit 1
+	   ;;
+esac
